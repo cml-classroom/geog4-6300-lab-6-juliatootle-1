@@ -48,70 +48,175 @@ We will start by looking at data for 2020.
 **Question 1** _Create histograms for NDVI, max temp., min temp., rain, and population, and water in 2020 as well as elevation. Based on these graphs, assess the normality of these variables._
 
 ```{r}
-#Code goes here.
+hist(lab6_data$ndvi_20_med)
+
+hist(lab6_data$maxtemp_20_med)
+
+hist(lab6_data$mintemp_20_med)
+
+hist(lab6_data$rain_20_sum)
+
+hist(lab6_data$pop_20)
+
+hist(lab6_data$water_20_pct)
+
+hist(lab6_data$elev_med)
 ```
 
-{Your assessment of the variables' normality goes here.}
+{Looking at the shape of these histograms, it is reasonable to say that none of these variables appear to be normally distributed. All the graphs appeared skewed to some extent.}
 
 **Question 2** _Use tmap to map these same variables using Jenks natural breaks as the classification method. For an extra challenge, use `tmap_arrange` to plot all maps in a single figure._
 
 ```{r}
+library(tmap)
+veg_map <- tm_shape(lab6_data)+
+  tm_polygons("ndvi_20_med", style="jenks")+
+tm_legend(legend.outside=TRUE)
 
+tmax_map <- tm_shape(lab6_data)+
+  tm_polygons("maxtemp_20_med", style="jenks")+
+tm_legend(legend.outside=TRUE)
+
+tmin_map <- tm_shape(lab6_data)+
+  tm_polygons("mintemp_20_med", style="jenks")+
+tm_legend(legend.outside=TRUE)
+
+rain_map <- tm_shape(lab6_data)+
+  tm_polygons("rain_20_sum", style="jenks")+
+tm_legend(legend.outside=TRUE)
+
+pop_map <- tm_shape(lab6_data)+
+  tm_polygons("pop_20", style="jenks")+
+tm_legend(legend.outside=TRUE)
+
+water_map <- tm_shape(lab6_data)+
+  tm_polygons("water_20_pct", style="jenks")+
+tm_legend(legend.outside=TRUE)
+
+elev_map <- tm_shape(lab6_data)+
+  tm_polygons("elev_med", style="jenks")+
+tm_legend(legend.outside=TRUE)
+
+tmap_arrange(veg_map, tmax_map, tmin_map, rain_map, pop_map, water_map, elev_map, ncol = 2)
 ```
 
 
 **Question 3** _Based on the maps from question 3, summarise major patterns you see in the spatial distribution of these data from any of your variables of interest. How do they appear to be associated with the NDVI variable?_
 
-{Your response here.}
+{NVDI: tends to be higher along coastal regions, with the highest values on the eastern coast.
+Max temp: gets higher as you go north, with a slight lean in directionality towards the west.
+Min temp: same as max temp; gets higher as you go north, with a slight lean in directionality towards the west.
+Rain: increases as you go toward the coast, particularly seen in the eastern and northern sectors.
+population: relatively consistent value throughout, with a few outlier points (most of which are located in the southeast). These are likely the major cities
+water: not a clear pattern, but generally has higher values within the middle of the eastern half.
+elevation: sectors which tend to gradually rise to high elevation zones; highest zone seen along the coast of the southeast, with other high elevation areas within the middle of the western half.
+
+NDVI tends to vary most closely with the rain variable, others partially coincide spatially but there is not as clear of a visual trend. This logically makes sense as increases in freshwater rain would allow for more vegetation growth. It is also reasonable to postulate that vegetation growth increases with decreasing temperature (tmax and tmin). This trend is somewhat evident on the map, with the highest degrees of vegetation being located on the southern coast.}
 
 **Question 4** _Create univariate models for each of the variables listed in question 1, with NDVI in 2020 as the dependent variable. Print a summary of each model. Write a summary of those results that indicates the direction, magnitude, and significance for each model coefficient._
 
 ```{r}
+tmax_model <- lm(ndvi_20_med~maxtemp_20_med, data = lab6_data)
+summary(tmax_model)
 
+tmin_model <- lm(ndvi_20_med~mintemp_20_med, data = lab6_data)
+summary(tmin_model)
+
+rain_model <- lm(ndvi_20_med~rain_20_sum, data = lab6_data)
+summary(rain_model)
+
+pop_model <- lm(ndvi_20_med~pop_20, data = lab6_data)
+summary(pop_model)
+
+water_model <- lm(ndvi_20_med~water_20_pct, data = lab6_data)
+summary(water_model)
+
+elev_model <- lm(ndvi_20_med~elev_med, data = lab6_data)
+summary(elev_model)
 ```
 
-{Discussion here}
+{Max temp: had a coefficient of -.013 (negative direction) with a three star significance level, indicating that the results were very significant. This indicates that for every degree increase in max temperature, there was a .013 decrease in NVDI level (vegetation).
+
+Min temp: had a coefficient of -.012 (negative direction), also with a three star significance (99.9% significant). This indicates that for every degree increase in min temperature, there was a .012 decrease in NVDI level.
+
+Rain: had a coefficient of 9.234e-07 (positive direction) with three star significance (99.9%). This means for every 1 mm increase of rain, there is a 9.234e-07 increase in NVDI level.
+
+Pop: had a coefficient of 1.500e-06 (positive direction) with a three star significance level. This indicates for every 1 unit increase in population, there is a 1.500e-06 increase in the NVDI level.
+
+Water: had a coefficient of -.17 (negative direction) with a p-value of .249, meaning that the results between these two variables is not statistically significant. This coefficient would indicate that for every 1 percent increase in land covered by water, there is a .17 decrease in NVDI level.
+
+Elevation: had a coefficient of 1.787e-04 (positive direction) with three star significance (99.9%). This indicates that for every 1 meter increase in elevation, there was a 1.787e-04 increase in NVDI level.}
 
 **Question 5** _Create a multivariate regression model with the variables of interest, choosing EITHER max or min temperature (but not both) You may also choose to leave out any variables that were insignificant in Q4. Use the univariate models as your guide. Call the results._
 
 ```{r}
-#Code goes here
+model_all<-lm(ndvi_20_med~maxtemp_20_med+rain_20_sum+pop_20+water_20_pct+elev_med,data=lab6_data)
+
+summary(model_all)
+
+library(sjPlot)
+tab_model(tmax_model, rain_model, pop_model, water_model, elev_model, model_all)
 ```
 
 **Question 6** _Summarize the results of the multivariate model. What are the direction, magnitude, and significance of each coefficient? How did it change from the univariate models you created in Q4 (if at all)? What do the R2 and F-statistic values tell you about overall model fit?_
 
-{Response goes here}
+{maxtemp: had a coefficient of -1.173e-02 (negative direction), this is a very similar value to what was found in the previous univariate model (-.01). They both also had p-values of <.001, making them very significant (99.9%).
+
+rain: had a coefficient of 8.464e-07 (positive direction), this was also very similar to the value in the previous model (9.234e-07, close to 0). They both also had p-values of <.001, making them very significant (99.9%).
+
+pop: had a coefficient of 2.873e-07 (positive direction), which was also very similar to the previous model (1.500e-06, essentially ~0). However, for this model there was a p-value of .006, which has 2 star significance (99%). This is still statistically significant but less so than the previous three star significance seen in the univariate model (99.9%). 
+
+water: had a coefficient of -3.387e-02 (negative direction), this was quite different from the previous model but was still in the negative direction (-.03 vs -.18). Additionally, this variable also was not considered significant (like in the previous model, receiving a p-value of .728).
+
+elevation: had a coefficient of 1.215e-04 (positive direction), which is very similar to the previous model (1.787e-04). It also received a p-value of <.001 (99.9% significance).
+
+R^2 and F-statistic: the R^2 value was .6397 which is quite good (a large amount of variation in nvdi is explained by the other variables of interest), and the F-statistic was 252.1 with a very small p-value (meaning the results are significant). This means that we reject the null hypothesis (that the predictors do not predict) and that there is at least one predictor that is contributing to variation in the ndvi variable.}
 
 **Question 7** _Use a histogram and a map to assess the normality of residuals and any spatial autocorrelation. Summarise any notable patterns that you see._
 
 ```{r}
-#Code goes here
+library(ggplot2)
+lab6_data$residuals<-residuals(model_all)
+
+hist(lab6_data$residuals)
+ggplot(lab6_data,aes(sample=residuals))+
+  stat_qq()+stat_qq_line()
+shapiro.test(lab6_data$residuals)
+
+tm_shape(lab6_data)+
+  tm_polygons("residuals", style="jenks")+
+tm_legend(legend.outside=TRUE)
+
 ```
 
-{Summary goes here}
+{Based off the histogram, the abnormal qq plot, and the shapiro-wilk test with a very small p-value (less than .05), we can determine that the distribution of residuals is not normal. Looking at the map, we tend to see the highest magnitude of residuals along the coast. This is generally seen at the positive and negative ends of the residual spectrum, though the negative residuals at the coastline have a greater magnitude. Analyzing other subsets, smaller negative values tend to be within the spatial middle of the continent, while smaller positive values tend to be closer to the coast (but, this trend is not as well defined).}
 
 **Question 8** _Assess any issues with multicollinearity or heteroskedastity in this model using the techniques shown in class. Run the appropriate tests and explain what their results show you._
 
 ```{r}
-#Code goes here
+library(car)
+vif(model_all)
+library(lmtest)
+bptest(model_all)
 ```
 
-{Interpretation goes here}
+{VIF checks for multicollinarity. All the variables had vif values of around 1. This is good as it indicates that there likely is no correlation between variables.
+
+BP checks for heteroskedastity. It got a BP of 122.09 with very small p-value (less than .05). This indicates that we reject the null hypothesis, and that the data is heteroskedastic (meaning that the variables do not have constant variance).}
 
 **Question 9** _How would you summarise the results of this model in a sentence or two? In addition, looking at the full model and your diagnostics, do you feel this is a model that provides meaningful results? Explain your answer._
 
-```{r}
-Discussion here
-```
+This multivariate model produced statistically significant results for most of its variables, with an overall R^2 of 63.97. Even though the coefficients for many of the variables were quite small, this indicates that the model had a strong overall fit and explained the general variance of the NDVI variable over the continent of Australia. Looking further at the models diagnostics, residuals were found to not be normally distributed. Additionally, the model was found heterskedastic by the BP test, but it did not have any multicollinarity issues (as supported by the VIF test). Overall, though the model offers insights into the relations between predictors, due to diagnostic issues (particularly heteroskedasticity and non-normal residuals), I would say that this is not necessarily the most meaningful model.
+
 
 
 **Disclosure of assistance:** _Besides class materials, what other sources of assistance did you use while completing this lab? These can include input from classmates, relevant material identified through web searches (e.g., Stack Overflow), or assistance from ChatGPT or other AI tools. How did these sources support your own learning in completing this lab?_
 
-{Response here.}
+{I consulted friends and used ChatGPT if we were having difficultites/errors. In simple terms, they elevate my learning or answer small questions I have very quickly (in particular, this lab it was very helpful in remembering what packages I needed to load for specific functions).}
 
 **Lab reflection:** _How do you feel about the work you did on this lab? Was it easy, moderate, or hard? What were the biggest things you learned by completing it?_
 
-{Discussion here.}
+{I thought this lab was moderate. It was a nice review of our previous lab at the beginning and allowed us to incorporate that knowledge into doing the regression models. The biggest thing I learned was how to format and use regression models in this coding program. These types of statistical methodologies are very common in the type of research I do, so it was very helpful to learn some coding aspects of it.}
 
 
 **Challenge question**
